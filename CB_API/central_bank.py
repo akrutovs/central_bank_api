@@ -41,7 +41,19 @@ class CbApi:
             value = value.replace(',', '.')
             return float(value) / nominal
         except:
-            print('Ошибка')
+            if char_code == 'RUB':
+                return 1
+            else:
+                print('Ошибка.Проверьте код валюты')
 
-    def convert(self, amount, cur_from, cur_to, request, date=''):
-        pass
+    def convert(self, amount, cur_from, cur_to, date=''):
+        try:
+            cur_to = cur_to.upper()
+            cur_from = cur_from.upper()
+            cur_1 = self.get_course(cur_from, date)
+            cur_2 = self.get_course(cur_to, date)
+            return (amount*cur_1)/cur_2
+        except:
+            print('Ошибка.Проверьте код валюты')
+
+
