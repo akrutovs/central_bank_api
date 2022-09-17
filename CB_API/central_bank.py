@@ -1,10 +1,11 @@
 import requests
 import re
-from halper.Halper import Check
+from helper.Helper import Check
+from bs4 import BeautifulSoup
 
 
 class CbApi:
-    def get_course_usd(self, date=''):
+    def get_xml(self, date=''):
         request = 'https://www.cbr.ru/scripts/XML_daily.asp'
         if date != '':
             find_numbers = re.findall(r'[0-9]+', date)
@@ -17,6 +18,30 @@ class CbApi:
                 return 0
         try:
             resp = requests.get(request)
-            print(resp.content)
+            return BeautifulSoup(resp.content, 'xml')
         except:
             print('Ошибка. Проверьте дату')
+
+    def get_course_usd(self, date=''):
+        soup = self.get_xml(date=date)
+        return float(soup.find(ID="R01235").Value.string.replace(',', '.'))
+
+    def get_course_euro(self, date=''):
+        soup = self.get_xml(date=date)
+        return float(soup.find(ID="R01239").Value.string.replace(',', '.'))
+
+    def get_course(self, char_code: str, date='') -> float:
+        """support AUD, AZN, GBP, AMD, BYN, BGN, BRL, HUF, HKD, DKK, USD, EUR, INR, KZT, CAD, KGS, CNY, MDL, NOK,
+        PLN, RON, XDR, SGD, TJS, TRY, TMT, UZS, UAH, CZK, SEK, CHF, ZAR, KRW, JPY"""
+        soup = self.get_xml(date=date)
+        char_code = char_code.upper()
+        try:
+            nominal = int(soup.find('CharCode', text=char_code).find_next_sibling('Nominal').string)
+            value = soup.find('CharCode', text=char_code).find_next_sibling('Value').string
+            value = value.replace(',', '.')
+            return float(value) / nominal
+        except:
+            print('Ошибка')
+
+    def convert(self, amount, cur_from, cur_to, request, date=''):
+        pass
